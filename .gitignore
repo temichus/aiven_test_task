@@ -1,0 +1,7 @@
+__pycache__
+artifacts
+.idea
+.DS_Store
+.coverage
+*.log
+htmlcov

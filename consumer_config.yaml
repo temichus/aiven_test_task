@@ -1,0 +1,5 @@
+sql_credentials:
+  dsn: 'postgres://avnadmin:nv05vr8wujpvonxz@pg-41934e2-temichus-3df1.aivencloud.com:24381/websites_monitor?sslmode=require'
+  ca_file : "pg_ca.pem"
+#  dsn: 'postgres://postgres:root@127.0.0.1:5432/websites_monitor'
+  wipe_db : true

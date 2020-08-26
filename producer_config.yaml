@@ -1,0 +1,8 @@
+delay_between_checks: 5
+
+websites_to_check:
+  - url: http://tut.by
+  - url: http://onliner.by
+    regex: "Google"
+
+

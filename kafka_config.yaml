@@ -1,0 +1,11 @@
+kafka_config:
+#  bootstrap_servers: 'localhost:9092'
+#  topic: 'websites_monitor'
+
+  bootstrap_servers: 'kafka-ccf8234-temichus-3df1.aivencloud.com:24383'
+  topic: 'websites_monitor'
+  ssl_context:
+    cafile: "ca.pem"  # CA used to sign certificate.
+                         # `CARoot` of JKS store container
+    certfile: "service.cert"  # Signed certificate
+    keyfile: "service.key"
