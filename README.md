@@ -107,7 +107,7 @@ pip3 install -r tests/requirements.txt
 ```
 #### Execution
 ```
-pytest /tests
+pytest tests/
 ```
 #### Tests coverage
 For calculating coverage Coverage.py tool was used
