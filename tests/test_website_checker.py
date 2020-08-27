@@ -1,7 +1,7 @@
 import pytest
 import logging
 import asyncio
-from producer.website_checker import WebsiteChecker
+from producer.website_checker import WebsitesChecker
 from common.config_parser import Config
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ expected_regex_result = {
 async def test_website_available(mocker, event_loop, config):
     kafka_porduser_stub = porduser_stub(mocker, 3)
     config.config["websites_to_check"] = config_dict
-    checker = WebsiteChecker(config, event_loop, kafka_porduser_stub)
+    checker = WebsitesChecker(config, event_loop, kafka_porduser_stub)
     await run_checker_once(checker)
 
     assert kafka_porduser_stub.call_count == 3
@@ -65,7 +65,7 @@ async def test_website_available(mocker, event_loop, config):
 async def test_website_unavailable(mocker, event_loop, config):
     kafka_porduser_stub = porduser_stub(mocker, 1)
     config.config["websites_to_check"] = [{"url": "http://tut.byy"}, ]
-    checker = WebsiteChecker(config, event_loop, kafka_porduser_stub)
+    checker = WebsitesChecker(config, event_loop, kafka_porduser_stub)
     await run_checker_once(checker)
 
     kafka_porduser_stub.assert_called_once()

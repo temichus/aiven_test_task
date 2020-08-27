@@ -4,7 +4,10 @@ from common.helpers.config_helpers import get_config_attr
 
 logger = logging.getLogger(__name__)
 
+
 class Config():
+    """Config parser"""
+
     def __init__(self, configs_path):
         self.config = dict()
         if type(configs_path) is not list:
@@ -14,5 +17,7 @@ class Config():
                 self.config.update(yaml.full_load(f))
 
     def get_config_attr(self, *args, default=None, do_copy=True):
+        """
+        Config attribute provider
+        """
         return get_config_attr(self.config, *args, default=default, do_copy=do_copy)
-

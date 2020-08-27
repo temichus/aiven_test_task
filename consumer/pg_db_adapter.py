@@ -6,6 +6,8 @@ import ssl
 
 logger = logging.getLogger(__name__)
 
+"""Sql queries templates"""
+
 GET_SIGNALS_TYPES_QUERY = \
     "SELECT monitor.signal_type.id, monitor.signal_type.url_id, monitor.website_url.url, monitor.signal_type.regex " \
     "FROM monitor.signal_type INNER JOIN monitor.website_url ON monitor.signal_type.url_id = monitor.website_url.id;"
@@ -16,7 +18,10 @@ LOG_SIGNSL_DATA = \
     "INSERT INTO monitor.signal_data(signal_id, status, response_time, time_code, regex_found) " \
     "VALUES ({}, {}, {}, '{}', {});"
 
+"""List of helpers to convert python types to SQL query format"""
 
+
+#####################################################
 def str_to_sql(str_val):
     if str_val is not None:
         return "'{}'".format(str_val)
@@ -38,8 +43,17 @@ def numeric_to_sql(val):
         return "NULL"
 
 
+#####################################################
+
 class DbWebsiteMetricsWriter:
+    """
+    Asynchronous Metrics Writer in Postgress DB
+    """
+
     def __init__(self, config):
+        """
+        :param config: Config obj
+        """
         conf = config.get_config_attr("sql_credentials")
         self.wipe_db = getattr(config, "wipe_db", False)
         for key, value in conf.items():
@@ -49,23 +63,37 @@ class DbWebsiteMetricsWriter:
         self.add_signal_type_lock = asyncio.Lock()
 
     async def __aenter__(self):
+        """
+        Start Connection 
+        """
         ssl_context = None
         if hasattr(self, "ca_file"):
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             ssl_context.load_verify_locations(self.ca_file)
         self.conn = await asyncpg.create_pool(dsn=self.dsn, ssl=ssl_context)
         if self.wipe_db:
-            await self.recreate_db()
+            await self._recreate_tables()
 
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """
+        Stop Connection 
+        """
         await self.conn.close()
 
     async def _fetch_signals_types(self):
+        """
+        Fetch existing signals types from DB
+        """
         self.signals_types = await self.conn.fetch(GET_SIGNALS_TYPES_QUERY)
 
     async def _add_signal(self, url, regex):
+        """
+        Add new Sgnal tipe in DB
+        :param url: Sgnal url
+        :param regex: Sgnal regex
+        """
 
         async def get_url_id():
             urls = await self.conn.fetch(GET_URLS)
@@ -76,10 +104,17 @@ class DbWebsiteMetricsWriter:
             return await get_url_id()
 
         url_id = await get_url_id()
-        print(ADD_SIGNAL.format(url_id, str_to_sql(regex)))
-        await self.conn.execute(ADD_SIGNAL.format(url_id, str_to_sql(regex)))
+        sql_query = ADD_SIGNAL.format(url_id, str_to_sql(regex))
+        logger.info(sql_query)
+        await self.conn.execute(sql_query)
 
-    async def get_signal_id(self, url, regex):
+    async def _get_signal_id(self, url, regex):
+        """
+        Get signal id by url, regex and create if not exist
+        :param url: Sgnal url
+        :param regex: Sgnal regex
+        :return: signal id 
+        """
         if not self.signals_types:
             await self._fetch_signals_types()
 
@@ -105,15 +140,28 @@ class DbWebsiteMetricsWriter:
         return await get_signal()
 
     async def log_signal_data(self, url, response_time, timestamp, status_code, regex, regex_found):
-        signal_id = await self.get_signal_id(url, regex)
+        """
+        Write signal in DB 
+        :param url: str
+        :param response_time: float
+        :param timestamp: str '%Y-%m-%d %H:%M:%S'
+        :param status_code: int
+        :param regex: str
+        :param regex_found: bool
+        """
+        signal_id = await self._get_signal_id(url, regex)
         query = LOG_SIGNSL_DATA.format(signal_id, numeric_to_sql(status_code), numeric_to_sql(response_time), timestamp,
-                                     bool_to_sql(regex_found))
+                                       bool_to_sql(regex_found))
         logger.info(query)
         await self.conn.execute(query)
 
-    async def recreate_db(self):
-        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sql_scripts", "drop_tables.sql"), "r") as f:
+    async def _recreate_tables(self):
+        """
+        Recreate Tables in DB method
+        """
+        sql_scripts = "sql_scripts"
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), sql_scripts, "drop_tables.sql"), "r") as f:
             await self.conn.execute(f.read())
-        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sql_scripts", "create_tables.sql"),
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), sql_scripts, "create_tables.sql"),
                   "r") as f:
             await self.conn.execute(f.read())

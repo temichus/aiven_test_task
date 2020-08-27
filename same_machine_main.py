@@ -1,19 +1,32 @@
+"""
+This is script to start everything in one process
+"""
+import asyncio
+import logging
 from consumer_main import main as consumer_main
 from producer_main import main as producer_main
 from common.setup_logger import setup_logger
-import asyncio
+from common.arguments_parsing import get_parser
 
-async def main(loop):
+logger = logging.getLogger(__name__)
+
+
+async def main(loop, args):
+    """
+      main method
+      :param loop: event loop
+      """
     await asyncio.gather(
-        consumer_main(loop),
-        producer_main(loop),
+        consumer_main(loop, args),
+        producer_main(loop, args),
     )
 
 
 if __name__ == '__main__':
-    setup_logger('common.log')
+    args = get_parser("producer", "consumer", "kafka", "logging")
+    setup_logger(args.log_file, args.log_level)
     try:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(main(loop))
+        loop.run_until_complete(main(loop, args))
     except KeyboardInterrupt:
-        print('interrupted!')
+        logger.info('interrupted!')

@@ -1,34 +1,34 @@
+"""
+This is script to start websites_checker/messages producer in independent process
+"""
+
 import asyncio
-from argparse import ArgumentParser
+import logging
 from common.config_parser import Config
-from producer.website_checker import WebsiteChecker
+from producer.website_checker import WebsitesChecker
 from producer.kafka_metrics_porducer import MetricsProducer
 from common.setup_logger import setup_logger
+from common.arguments_parsing import get_parser
 
+logger = logging.getLogger(__name__)
 
-
-def pars_args():
-    parser = ArgumentParser()
-    parser.add_argument(
-        "--producer_config", action="store", help="producer config file path", default="producer_config.yaml")
-    parser.add_argument(
-        "--kafka_config", action="store", help="kafka config filr path", default="kafka_config.yaml")
-    return parser.parse_args()
-
-
-async def main(loop):
-    args = pars_args()
+async def main(loop, args):
+    """
+      main method
+      :param loop: event loop
+      """
     config_obj = Config([args.producer_config, args.kafka_config])
     producer = MetricsProducer(config_obj, loop)
-    checker = WebsiteChecker(config_obj, loop, producer.send)
+    checker = WebsitesChecker(config_obj, loop, producer.send)
     async with producer:
         await checker.run_forever()
 
 
 if __name__ == '__main__':
-    setup_logger('producer.log')
+    args = get_parser("producer", "kafka", "logging")
+    setup_logger(args.log_file, args.log_level)
     try:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(main(loop))
+        loop.run_until_complete(main(loop,args))
     except KeyboardInterrupt:
-        print('interrupted!')
+        logger.info('interrupted!')
