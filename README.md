@@ -57,10 +57,10 @@ websites_to_check:
 ```
 sql_credentials:
   #DSN for DB connection
-  dsn: 'SOME DSN'
+  dsn: '<SOME DSN>'
   #(optional) CA file path for DB. None by dafault
-  ca_file : "pg_ca.pem"
-  # (optional) Should the BD been wiped ad start. False by default
+  ca_file : "<CA_FILE_PATH>"
+  # (optional) Should the BD been wiped ad start. false by default
   wipe_db : true
  ```
 
@@ -69,18 +69,18 @@ sql_credentials:
 ```
 kafka_config:
   # kafka bootstrap servers
-  bootstrap_servers: 'kafka-ccf8234-temichus-3df1.aivencloud.com:24383'
-  # kafka topoc
-  topic: 'websites_monitor'
+  bootstrap_servers: '<KAFKA_SERVER>'
+  # kafka topic
+  topic: '<TOPIC>'
 
   # (optional) data to setup ssl context
   ssl_context:
     # CA used to sign certificate file
-    cafile: "ca.pem"
+    cafile: "<CA_FILE_PATH>"
     # Signed certificate file
-    certfile: "service.cert"
+    certfile: "<CERT_FILE_PATH>"
     # Private Key file of `certfile` certificate
-    keyfile: "service.key"
+    keyfile: "<KEY_FILE_PATH>"
  ```
 
 
